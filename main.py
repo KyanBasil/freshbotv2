@@ -3,10 +3,12 @@ import csv
 
 # Data Representation
 employees = {
-	"kempkyan": {"start": "09:00", "end": "16:00"},
-	"fizzyfiz": {"start": "09:00", "end": "16:00"},
-	"jennfowl": {"start": "09:00", "end": "16:00"},
-	"test1": {"start": "09:00", "end": "17:00"} , # All-day availability
+	"kempkyan": {"start": "09:00", "end": "13:00", "skills": ["CS", "CHR"]},
+	"fizzyfiz": {"start": "09:00", "end": "13:00", "skills": ["ALC", "ENT"]},
+	"jennfowl": {"start": "12:00", "end": "17:00", "skills": ["CS", "CHR"]},
+	"night1": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT"]},
+	"night2": {"start": "12:00", "end": "17:00", "skills": ["CS", "CHR"]},
+	"night3": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT"]} , # All-day availability
 }
 zones = {
 	"CS": {"capacity": 1},
@@ -14,6 +16,9 @@ zones = {
 	"ENT": {"capacity": 1},
 	"ALC": {"capacity": 1}
 }
+
+def has_required_skills(employee, zone_id): 
+	return employees[employee]["skills"]  
 
 def match_employees_to_zones():
 	print("------ Starting Initial Assignments ----------")
@@ -34,7 +39,7 @@ def match_employees_to_zones():
 			if zone_data_copy["capacity"] > 0:
 				if available_employees:
 					for employee, _data in available_employees:
-						if employee_usage[employee] == 0:
+						if employee_usage[employee] == 0 and has_required_skills(employee, zone_id): # Skill check added
 							schedule.setdefault(zone_id, []).append((employee, hour))
 							zone_data_copy["capacity"] -= 1
 							employee_usage[employee] += 1

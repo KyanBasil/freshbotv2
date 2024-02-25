@@ -8,7 +8,7 @@ employees = {
 	"jennfowl": {"start": "12:00", "end": "17:00", "skills": ["CS", "CHR"]},
 	"night1": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT"]},
 	"night2": {"start": "12:00", "end": "17:00", "skills": ["CS", "CHR"]},
-	"night3": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT"]} , # All-day availability
+	"night3": 	{"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT"]} , # All-day availability
 }
 zones = {
 	"CS": {"capacity": 1},
@@ -16,9 +16,18 @@ zones = {
 	"ENT": {"capacity": 1},
 	"ALC": {"capacity": 1}
 }
+zone_requirements = {
+	"CS": ["CS"],
+	"CHR": ["CHR"],
+	"ENT": ["ENT"],
+	"ALC": ["ALC"]  
+}
 
-def has_required_skills(employee, zone_id): 
-	return employees[employee]["skills"]  
+def has_required_skills(employee, zone_id):
+	employee_skills = employees[employee]["skills"]
+	required_skills = zone_requirements.get(zone_id, [])  
+	return all(skill in employee_skills for skill in required_skills) 
+ 
 
 def match_employees_to_zones():
 	print("------ Starting Initial Assignments ----------")

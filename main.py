@@ -1,15 +1,13 @@
-import random
+
 import csv
 
 # Data Representation
 employees = {
-	"kempkyan": {"start": "09:00", "end": "13:00"},
-	"fizzyfiz": {"start": "10:00", "end": "15:00"},
-	"jennfowl": {"start": "12:00", "end": "16:00"},
-	"test1": {"start": "09:00", "end": "16:00"} , # All-day availability
-	"test2": {"start": "11:00", "end": "17:00"} , # Overlapping availability 
+	"kempkyan": {"start": "09:00", "end": "16:00"},
+	"fizzyfiz": {"start": "09:00", "end": "16:00"},
+	"jennfowl": {"start": "09:00", "end": "16:00"},
+	"test1": {"start": "09:00", "end": "17:00"} , # All-day availability
 }
-
 zones = {
 	"CS": {"capacity": 1},
 	"CHR": {"capacity": 1},
@@ -21,51 +19,49 @@ def match_employees_to_zones():
 	print("------ Starting Initial Assignments ----------")
 	schedule = {}
 	errors = []
-	employee_usage = {emp: 0 for emp in employees} 
+	
+	for hour in range(9, 17):  
+		employee_usage = {emp: 0 for emp in employees}  # Reset usage for each run
 
-	for hour in range(9, 17): 
 		available_employees = [(emp, data) for emp, data in employees.items()
-			if int(data["start"][:2]) <= hour < int(data["end"][:2])] # Reset usage
-		# print("Employee Usage:", employee_usage) 
+			if int(data["start"][:2]) <= hour < int(data["end"][:2])]
 
-		print("------ HOUR:", hour, "---------") # Added debugging line
-		print("Available Employees:", available_employees) 
+		print("------ HOUR:", hour, "---------")
+		print("Available Employees:", available_employees)
 
-		# Initial Assignment Pass
 		for zone_id, zone_data in zones.items():
-			zone_data_copy = zone_data.copy() # Create a copy 
+			zone_data_copy = zone_data.copy()
 			if zone_data_copy["capacity"] > 0:
-				print("Zone Capacities:", {zone_id: zone_data["capacity"] for zone_id, zone_data in zones.items()})
 				if available_employees:
-					employee, data = min(available_employees, key=lambda item: employee_usage[item[0]])  
-					schedule.setdefault(zone_id, []).append(('TBA', hour)) # Temporary 'TBA'
-					zone_data_copy["capacity"] = 0 # Update the copy
-					print("Zone Capacities (After Assignment):", {zone_id: zone_data["capacity"] for zone_id, zone_data in zones.items()}) # Debugging line
-					employee_usage[employee] += 1 
-				else:
-					print(f"No employee available at {hour}:00 for Zone: {zone_id}")
-					print("Available Employees:", available_employees) # Added debugging line
-					schedule.setdefault(zone_id, []).append(('TBA', hour))
+					for employee, _data in available_employees:
+						if employee_usage[employee] == 0:
+							schedule.setdefault(zone_id, []).append((employee, hour))
+							zone_data_copy["capacity"] -= 1
+							employee_usage[employee] += 1
+							break
+					else:
+						print(f"Adding 'TBA' for Zone: {zone_id} at Hour: {hour}")  # Insert the line here
+						errors.append(f"No employee available for Zone {zone_id} at {hour}:00")
+						schedule.setdefault(zone_id, []).append(('TBA', hour))
 
+		for zone_id, assignments in schedule.items():
+			for i, (employee, hour) in enumerate(assignments):
+				if employee == 'TBA':
+					print("Resolving TBA for Zone:", zone_id, "Hour:", hour) # Add this line
+					later_employees = [(emp, data) for emp, data in employees.items() if int(data["start"][:2]) > hour]
 
-	# Second Pass - Resolve 'TBA' 
-				for zone_id, assignments in schedule.items():
-					zone_capacities_snapshot = {zone_id: zone_data["capacity"] for zone_id, zone_data in zones.items()} # Create a copy
-					for i, (employee, hour) in enumerate(assignments):
-						if employee == 'TBA':
-							print("BEFORE Zone Capacities:", zone_capacities_snapshot)  # Use the snapshot
-				later_employees = [(emp, data) for emp, data in employees.items()
-								 if int(data["start"][:2]) > hour] # Employees starting later
-				if later_employees:
-					employee, data = min(later_employees, key=lambda item: employee_usage[item[0]])
-					schedule[zone_id][i] = (employee, hour) # Replace 'TBA'
-					employee_usage[employee] += 1
-				else:
-					schedule[zone_id][i] = ('BOH', hour) # True 'last resort'
-				print("AFTER Zone Capacities:", zone_capacities_snapshot)
-
+					if later_employees and zone_data_copy["capacity"] > 0:
+						for emp, _data in later_employees:
+							if employee_usage[emp] == 0:
+								schedule[zone_id][i] = (emp, hour)
+								employee_usage[emp] += 1
+								zone_data_copy["capacity"] -= 1
+								break
+						else:
+							print("Assigning 'BOH' to Zone:", zone_id, "Hour:", hour) # Add this line
+							schedule[zone_id][i] = ('BOH', hour)
+							
 	return schedule, errors 
-
 
 # Execute the matching logic
 result, errors = match_employees_to_zones()
@@ -85,11 +81,9 @@ with open('schedule.csv', 'w', newline='') as csvfile:
 					end_time = f"{hour + 1}:00"
 					writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time})
 					found = True
-					break # No need to check other employees for this hour
+					break
 			if not found:
-				writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': f"{hour}:00", 'End': f"{hour + 1}:00"})
-
-
+				writer.writerow({'Zone': zone_id, 'Employee': '', 'Start': f"{hour}:00", 'End': f"{hour + 1}:00"})
 
 # Print any errors that occurred
 if errors:

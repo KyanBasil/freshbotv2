@@ -1,14 +1,3 @@
-"""
-Matches employees to zones based on availability and skill requirements.
-
-The `match_employees_to_zones` function is the main entry point for the employee scheduling logic. It takes a dictionary of employees and their availability and skills, and returns a schedule of employee assignments to zones, as well as a list of any errors that occurred during the matching process.
-
-The function first creates a dictionary to track employee usage, then iterates through each hour of the day and each zone, attempting to assign the best available employee to each zone. The `find_best_employee` function is used to determine the best employee for a given zone and hour, taking into account the employee's skills, availability, and any existing assignments.
-
-If no employee is available for a zone, a 'TBA' (to be assigned) placeholder is added to the schedule. The `resolve_tba_assignments` function is then called to attempt to assign available employees to the 'TBA' slots.
-
-Finally, the `write_schedule_to_csv` function is called to write the final schedule to a CSV file, and the `print_errors` function is called to display any errors that occurred during the matching process.
-"""
 import csv
 from typing import List, Dict, Tuple, Any
 from employee import employees

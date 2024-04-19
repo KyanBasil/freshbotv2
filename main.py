@@ -1,21 +1,14 @@
+# main.py
 import csv
 from typing import List, Dict, Tuple, Any
-from employee import employees
+from employee import *
+import json
 
 
-zones: Dict[str, Dict[str, int]] = {
-  "CHR": {"capacity": 1},
-  "CS": {"capacity": 1},
-  "ENT": {"capacity": 1},
-  "ALC": {"capacity": 1}
-}
-
-zone_requirements: Dict[str, List[str]] = {
-  "CS": ["CS"],
-  "CHR": ["CHR"],
-  "ENT": ["ENT"],
-  "ALC": ["ALC"]
-}
+with open('zones.json') as f:
+    data = json.load(f)
+    zones = data['zones']
+    zone_requirements = data['zone_requirements']
 
 def validate_employee_data(employees: Dict[str, Dict[str, Any]]) -> None:
   errors: List[str] = []
@@ -51,24 +44,22 @@ def calculate_penalty(consecutive_hours: int) -> int:
     return consecutive_hours - 2  # Penalty increases linearly after two hours
 
 def find_best_employee(available_employees: List[Tuple[str, Dict[str, Any]]], zone_id: str, hour: int, employee_usage: Dict[str, Dict[str, Any]], schedule: Dict[str, List[Tuple[str, int]]], errors: List[str]) -> str:
-  """Find the best employee for a given zone and hour."""
-  best_employee: str = None
-  best_penalty: int = float("inf")
+    """Find the best employee for a given zone and hour."""
+    def penalty_key(employee_data: Tuple[str, Dict[str, Any]]) -> int:
+        employee, _ = employee_data
+        return calculate_penalty(employee_usage[employee]['used'])
 
-  for employee, _data in available_employees:
-    penalty: int = calculate_penalty(employee_usage[employee]['used'])
+    filtered_employees = [
+        (employee, data) for employee, data in available_employees
+        if has_required_skills(employee, zone_id) and hour not in employee_usage[employee]['assignments']
+        and not any(zone_id == assigned_zone for assigned_zone, _ in schedule.get(employee, []))
+    ]
 
-    if (penalty < best_penalty and has_required_skills(employee, zone_id) and
-        hour not in employee_usage[employee]['assignments']):
+    if filtered_employees:
+        return min(filtered_employees, key=penalty_key)[0]
+    else:
+        return None
 
-      if any(zone_id == assigned_zone for assigned_zone, _ in schedule.get(employee, [])):
-        errors.append(f"Employee {employee} is already assigned to zone {zone_id} in the same timeslot")
-        continue
-
-      best_employee = employee
-      best_penalty = penalty
-
-  return best_employee
 
 def assign_employee_to_zone(employee: str, zone_id: str, hour: int, employee_usage: Dict[str, Dict[str, Any]], zone_data_copy: Dict[str, int], schedule: Dict[str, List[Tuple[str, int]]]) -> None:
   """Assign an employee to a zone for a given hour."""
@@ -79,70 +70,77 @@ def assign_employee_to_zone(employee: str, zone_id: str, hour: int, employee_usa
   employee_usage[employee]['assignments'][hour] = zone_id
 
 def match_employees_to_zones(employees: Dict[str, Dict[str, Any]]) -> Tuple[Dict[str, List[Tuple[str, int]]], List[str]]:
-  """Match employees to zones based on availability and requirements."""
-  schedule: Dict[str, List[Tuple[str, int]]] = {}
-  errors: List[str] = []
-  employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
+    """Match employees to zones based on availability and requirements."""
+    schedule: Dict[str, List[Tuple[str, int]]] = {}
+    errors: List[str] = []
+    employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
 
-  for hour in range(9, 17):
-    available_employees: List[Tuple[str, Dict[str, Any]]] = [(emp, data) for emp, data in employees.items()
-                           if int(data["start"][:2]) <= hour < int(data["end"][:2])]
+    for hour in range(8, 22):
+        available_employees: List[Tuple[str, Dict[str, Any]]] = [(emp, data) for emp, data in employees.items()
+                               if int(data["start"][:2]) <= hour < int(data["end"][:2])]
 
-    for zone_id, zone_data in zones.items():
-      zone_data_copy: Dict[str, int] = zone_data.copy()
+        for zone_id, zone_data in zones.items():
+            zone_data_copy: Dict[str, int] = zone_data.copy()
 
-      if zone_data_copy["capacity"] > 0:
-        if available_employees:
-          best_employee: str = find_best_employee(available_employees, zone_id, hour, employee_usage, schedule, errors)
-          if best_employee:
-            assign_employee_to_zone(best_employee, zone_id, hour, employee_usage, zone_data_copy, schedule)
-        else:
-          schedule.setdefault(zone_id, []).append(('TBA', hour))
+            if zone_data_copy["capacity"] > 0:
+                if available_employees:
+                    best_employee: str = find_best_employee(available_employees, zone_id, hour, employee_usage, schedule, errors)
+                    if best_employee:
+                        assign_employee_to_zone(best_employee, zone_id, hour, employee_usage, zone_data_copy, schedule)
+                    else:
+                        schedule.setdefault(zone_id, []).append(('BOH', hour))  # Changed from 'TBA' to 'BOH'
+                else:
+                    schedule.setdefault(zone_id, []).append(('BOH', hour))  # Changed from 'TBA' to 'BOH'
 
-  return schedule, errors
+    return schedule, errors
+
+
 
 def resolve_tba_assignments(schedule: Dict[str, List[Tuple[str, int]]], errors: List[str], employee_usage: Dict[str, Dict[str, Any]]) -> None:
-  """Resolve 'TBA' assignments by assigning available employees."""
-  for zone_id, assignments in schedule.items():
-    for i, (employee, hour) in enumerate(assignments):
-      if employee == 'TBA':
-        later_employees: List[Tuple[str, Dict[str, Any]]] = [(emp, data) for emp, data in employees.items() if int(data["start"][:2]) > hour]
+    """Assign available employees to 'BOH' slots if they become available."""
+    for zone_id, assignments in schedule.items():
+        for i, (employee, hour) in enumerate(assignments):
+            if employee == 'BOH':
+                later_employees: List[Tuple[str, Dict[str, Any]]] = [(emp, data) for emp, data in employees.items() if int(data["start"][:2]) > hour]
 
-        if later_employees and zones[zone_id]["capacity"] > 0:
-          for emp, _data in later_employees:
-            if any(zone_id == assigned_zone for assigned_zone, _ in schedule.get(emp, [])):
-              errors.append(f"Employee {emp} is already assigned to zone {zone_id} in the same timeslot")
-              continue
+                if later_employees:
+                    best_employee: str = find_best_employee(later_employees, zone_id, hour, employee_usage, schedule, errors)
+                    if best_employee:
+                        schedule[zone_id][i] = (best_employee, hour)
+                        employee_usage[best_employee]['used'] += 1
+                        employee_usage[best_employee]['current_zone'] = zone_id
+                        employee_usage[best_employee]['assignments'][hour] = zone_id
 
-            schedule[zone_id][i] = (emp, hour)
-            employee_usage[emp]['used'] += 1
-            employee_usage[emp]['current_zone'] = zone_id
-            employee_usage[emp]['assignments'][hour] = zone_id
-            zones[zone_id]["capacity"] -= 1
-            break
 
 def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]]) -> None:
-  """Write the schedule to a CSV file."""
-  with open('schedule.csv', 'w', newline='') as csvfile:
-    fieldnames: List[str] = ['Zone', 'Employee', 'Start', 'End']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    writer.writeheader()
+    """Write the schedule to a CSV file."""
+    with open('schedule.csv', 'w', newline='') as csvfile:
+        fieldnames: List[str] = ['Zone', 'Employee', 'Start', 'End']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
 
-    for zone_id, assignments in schedule.items():
-      for hour in range(9, 17):
-        found: bool = False
-        for employee, assigned_hour in assignments:
-          if assigned_hour == hour:
-            start_time: str = f"{hour:02d}:00"
-            end_time: str = f"{hour + 1:02d}:00"
-            writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time})
-            found = True
-            break
+        boh_count: int = 0
 
-        if not found:
-          start_time: str = f"{hour:02d}:00"
-          end_time: str = f"{hour + 1:02d}:00"
-          writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time})
+        for zone_id, assignments in schedule.items():
+            for hour in range(8, 22):
+                found: bool = False
+                for employee, assigned_hour in assignments:
+                    if assigned_hour == hour:
+                        start_time: str = f"{hour:02d}:00"
+                        end_time: str = f"{hour + 1:02d}:00"
+                        writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time})
+                        found = True
+                        break
+                
+                if not found:
+                    start_time: str = f"{hour:02d}:00"
+                    end_time: str = f"{hour + 1:02d}:00"
+                    writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time})
+                    boh_count += 1
+
+        writer.writerow({'Zone': 'Total BOH Slots', 'Employee': str(boh_count), 'Start': '', 'End': ''})
+
+
 
 def print_errors(errors: List[str]) -> None:
   """Print any errors that occurred during the matching process."""

@@ -1,9 +1,9 @@
 {
     "zones": {
+      "ALC": {"capacity": 1},
       "CHR": {"capacity": 1},
       "CS": {"capacity": 1},
-      "ENT": {"capacity": 1},
-      "ALC": {"capacity": 1}
+      "ENT": {"capacity": 1}
     },
     "zone_requirements": {
       "CS": ["CS"],

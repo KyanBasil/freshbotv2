@@ -2,9 +2,9 @@
 from typing import Dict, Any
 
 employees: Dict[str, Dict[str, Any]] = {
-  "kempkyan": {"start": "09:00", "end": "13:00", "skills": ["CS", "CHR"]},
-  "fizzyfiz": {"start": "10:00", "end": "13:00", "skills": ["ALC", "ENT", "CS", "CHR"]},
-  "jennfowl": {"start": "11:00", "end": "17:00", "skills": ["ALC", "ENT", "CS", "CHR"]},
+  "kempkyan": {"start": "12:00", "end": "21:00", "skills": ["CS", "CHR", "ALC", "ENT"]},
+  "fizzyfiz": {"start": "08:00", "end": "21:00", "skills": ["ALC", "ENT", "CS", "CHR"]},
+  "jennfowl": {"start": "08:00", "end": "21:00", "skills": ["ALC", "ENT", "CS", "CHR"]},
   "night1": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT", "CS", "CHR"]},
   "night2": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT", "CS", "CHR"]},
   "night3": {"start": "12:00", "end": "17:00", "skills": ["ALC", "ENT", "CS", "CHR"]},

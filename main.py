@@ -11,20 +11,21 @@ with open('zones.json') as f:
     zone_requirements = data['zone_requirements']
 
 def validate_employee_data(employees: Dict[str, Dict[str, Any]]) -> None:
-  errors: List[str] = []
-  for emp, data in employees.items():
-    if "start" not in data:
-      errors.append(f"Missing start time for {emp}")
-    if "end" not in data:  
-      errors.append(f"Missing end time for {emp}")
-    if "skills" not in data:
-      errors.append(f"Missing skills for {emp}")
+    errors: List[str] = []
+    for employee_id, employee_data in employees.items():
+        if "start" not in employee_data:
+            errors.append(f"Missing start time for {employee_id}")
+        if "end" not in employee_data:
+            errors.append(f"Missing end time for {employee_id}")
+        if "skills" not in employee_data:
+            errors.append(f"Missing skills for {employee_id}")
 
-  if errors:
-    print("Invalid employee data:")
-    for error in errors:
-      print(error)
-    raise ValueError("Invalid employee data")
+    if errors:
+        print("Invalid employee data:")
+        for error in errors:
+            print(error)
+        raise ValueError("Invalid employee data")
+
 
 # Add this before processing data
 validate_employee_data(employees)
@@ -76,7 +77,10 @@ def match_employees_to_zones(employees: Dict[str, Dict[str, Any]]) -> Tuple[Dict
     errors: List[str] = []
     employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
 
-    for hour in range(8, 22):
+    min_start_time = min(int(data["start"][:2]) for data in employees.values())
+    max_end_time = max(int(data["end"][:2]) for data in employees.values())
+
+    for hour in range(min_start_time, max_end_time):
         available_employees: List[Tuple[str, Dict[str, Any]]] = [
             (emp, data) for emp, data in employees.items()
             if int(data["start"][:2]) <= hour < int(data["end"][:2])
@@ -126,29 +130,29 @@ def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]], employee_u
         writer.writeheader()
 
         boh_count: int = 0
-        consecutive_hours: Dict[str, int] = {}
+        consecutive_hours: Dict[str, int] = {emp: 0 for emp in employees}
 
         for zone_id, assignments in schedule.items():
-            for hour in range(8, 22):
-                found: bool = False
+            for hour in range(8, 21):
+                found = False
                 for employee, assigned_hour in assignments:
                     if assigned_hour == hour:
-                        start_time: str = f"{hour:02d}:00"
-                        end_time: str = f"{hour + 1:02d}:00"
-                        if employee in consecutive_hours and (employee_usage[employee]['current_zone'] != zone_id or hour - assigned_hour > 1):
-                            consecutive_hours[employee] = 0
-                        consecutive_hours[employee] = consecutive_hours.get(employee, 0) + 1
-                        penalty: int = calculate_penalty(consecutive_hours[employee])
-                        print(f"Zone: {zone_id}, Employee: {employee}, Hour: {hour}, Consecutive Hours: {consecutive_hours[employee]}, Penalty: {penalty}")
+                        start_time = f"{hour:02d}:00"
+                        end_time = f"{hour + 1:02d}:00"
+                        penalty = calculate_penalty(consecutive_hours[employee])
                         writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time, 'Penalty': penalty})
                         found = True
+                        consecutive_hours[employee] += 1
                         break
-
+                    else:
+                        consecutive_hours[employee] = 0
                 if not found:
-                    start_time: str = f"{hour:02d}:00"
-                    end_time: str = f"{hour + 1:02d}:00"
-                    writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time, 'Penalty': ''})
+                    start_time = f"{hour:02d}:00"
+                    end_time = f"{hour + 1:02d}:00"
+                    writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time, 'Penalty': 0})
                     boh_count += 1
+
+
 
         writer.writerow({'Zone': 'Total BOH Slots', 'Employee': str(boh_count), 'Start': '', 'End': '', 'Penalty': ''})
 

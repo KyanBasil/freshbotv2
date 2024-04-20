@@ -37,11 +37,12 @@ def has_required_skills(employee: str, zone_id: str) -> bool:
   return all(skill in employee_skills for skill in required_skills)
 
 def calculate_penalty(consecutive_hours: int) -> int:
-  """Calculate the penalty for consecutive hours worked."""
-  if consecutive_hours <= 2:
-    return 0  # No penalty within the preferred limit
-  else:
-    return consecutive_hours - 2  # Penalty increases linearly after two hours
+    """Calculate the penalty for consecutive hours worked."""
+    if consecutive_hours <= 4:
+        return 0  # No penalty within the preferred limit
+    else:
+        return consecutive_hours - 4  # Penalty increases linearly after four hours
+
 
 def find_best_employee(available_employees: List[Tuple[str, Dict[str, Any]]], zone_id: str, hour: int, employee_usage: Dict[str, Dict[str, Any]], schedule: Dict[str, List[Tuple[str, int]]], errors: List[str]) -> str:
     """Find the best employee for a given zone and hour."""
@@ -76,8 +77,10 @@ def match_employees_to_zones(employees: Dict[str, Dict[str, Any]]) -> Tuple[Dict
     employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
 
     for hour in range(8, 22):
-        available_employees: List[Tuple[str, Dict[str, Any]]] = [(emp, data) for emp, data in employees.items()
-                               if int(data["start"][:2]) <= hour < int(data["end"][:2])]
+        available_employees: List[Tuple[str, Dict[str, Any]]] = [
+            (emp, data) for emp, data in employees.items()
+            if int(data["start"][:2]) <= hour < int(data["end"][:2])
+        ]
 
         for zone_id, zone_data in zones.items():
             zone_data_copy: Dict[str, int] = zone_data.copy()
@@ -101,8 +104,10 @@ def resolve_tba_assignments(schedule: Dict[str, List[Tuple[str, int]]], errors: 
     for zone_id, assignments in schedule.items():
         for i, (employee, hour) in enumerate(assignments):
             if employee == 'BOH':
-                later_employees: List[Tuple[str, Dict[str, Any]]] = [(emp, data) for emp, data in employees.items() if int(data["start"][:2]) > hour]
-
+                later_employees: List[Tuple[str, Dict[str, Any]]] = [
+                  (emp, data) for emp, data in employees.items()
+                  if int(data["start"][:2]) > hour and int(data["start"][:2]) < int(data["end"][:2])
+                ]
                 if later_employees:
                     best_employee: str = find_best_employee(later_employees, zone_id, hour, employee_usage, schedule, errors)
                     if best_employee:
@@ -112,14 +117,16 @@ def resolve_tba_assignments(schedule: Dict[str, List[Tuple[str, int]]], errors: 
                         employee_usage[best_employee]['assignments'][hour] = zone_id
 
 
-def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]]) -> None:
+
+def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]], employee_usage: Dict[str, Dict[str, Any]]) -> None:
     """Write the schedule to a CSV file."""
     with open('schedule.csv', 'w', newline='') as csvfile:
-        fieldnames: List[str] = ['Zone', 'Employee', 'Start', 'End']
+        fieldnames: List[str] = ['Zone', 'Employee', 'Start', 'End', 'Penalty']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
         boh_count: int = 0
+        consecutive_hours: Dict[str, int] = {}
 
         for zone_id, assignments in schedule.items():
             for hour in range(8, 22):
@@ -128,19 +135,22 @@ def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]]) -> None:
                     if assigned_hour == hour:
                         start_time: str = f"{hour:02d}:00"
                         end_time: str = f"{hour + 1:02d}:00"
-                        writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time})
+                        if employee in consecutive_hours and (employee_usage[employee]['current_zone'] != zone_id or hour - assigned_hour > 1):
+                            consecutive_hours[employee] = 0
+                        consecutive_hours[employee] = consecutive_hours.get(employee, 0) + 1
+                        penalty: int = calculate_penalty(consecutive_hours[employee])
+                        print(f"Zone: {zone_id}, Employee: {employee}, Hour: {hour}, Consecutive Hours: {consecutive_hours[employee]}, Penalty: {penalty}")
+                        writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time, 'Penalty': penalty})
                         found = True
                         break
-                
+
                 if not found:
                     start_time: str = f"{hour:02d}:00"
                     end_time: str = f"{hour + 1:02d}:00"
-                    writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time})
+                    writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time, 'Penalty': ''})
                     boh_count += 1
 
-        writer.writerow({'Zone': 'Total BOH Slots', 'Employee': str(boh_count), 'Start': '', 'End': ''})
-
-
+        writer.writerow({'Zone': 'Total BOH Slots', 'Employee': str(boh_count), 'Start': '', 'End': '', 'Penalty': ''})
 
 def print_errors(errors: List[str]) -> None:
   """Print any errors that occurred during the matching process."""
@@ -155,25 +165,25 @@ def print_errors(errors: List[str]) -> None:
 
 # Main program
 try:
+    schedule, errors = match_employees_to_zones(employees)
+    employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
 
-  schedule, errors = match_employees_to_zones(employees)
-  employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
+    resolve_tba_assignments(schedule, errors, employee_usage)
 
-  resolve_tba_assignments(schedule, errors, employee_usage)
-
-  write_schedule_to_csv(schedule)
+    write_schedule_to_csv(schedule, employee_usage)
 
 except ValueError as e:
-  print("Invalid employee data:", e)
-  
+    print("Invalid employee data:", e)
+
 except Exception as e:
-  print("Error generating schedule:", e)
+    print("Error generating schedule:", e)
 
 else:
-  print("Schedule generated successfully")
+    print("Schedule generated successfully")
 
 finally:
-  print("Process complete")
+    print("Process complete")
 
 print_errors(errors)
+
 

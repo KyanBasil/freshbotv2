@@ -1,0 +1,123 @@
+{
+    "kempkyan": {
+      "start": "08:00",
+      "end": "12:00",
+      "skills": [
+        "CS",
+        "CHR",
+        "ALC",
+        "ENT"
+      ]
+    },
+    "fizzyfiz": {
+      "start": "08:00",
+      "end": "14:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "jennfowl": {
+      "start": "08:00",
+      "end": "13:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "jimmyjim": {
+      "start": "08:00",
+      "end": "12:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "night1": {
+      "start": "12:00",
+      "end": "17:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "night2": {
+      "start": "12:00",
+      "end": "17:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "night3": {
+      "start": "12:00",
+      "end": "17:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "night4": {
+      "start": "12:00",
+      "end": "17:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "evening1": {
+      "start": "15:00",
+      "end": "20:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "evening2": {
+      "start": "15:00",
+      "end": "20:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "evening3": {
+      "start": "15:00",
+      "end": "20:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    },
+    "evening4": {
+      "start": "15:00",
+      "end": "20:00",
+      "skills": [
+        "ALC",
+        "ENT",
+        "CS",
+        "CHR"
+      ]
+    }
+  }
+  

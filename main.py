@@ -1,193 +1,128 @@
-# main.py
 import csv
-from typing import List, Dict, Tuple, Any
-from employee import *
 import json
+from typing import List, Dict, Tuple, Any
 
+class Employee:
+    def __init__(self, employee_id: str, start_time: str, end_time: str, skills: List[str]):
+        self.employee_id = employee_id
+        self.start_time = start_time
+        self.end_time = end_time
+        self.skills = skills
+        self.assignments: Dict[int, str] = {}
+        self.consecutive_hours = 0
 
-with open('zones.json') as f:
-    data = json.load(f)
-    zones = data['zones']
-    zone_requirements = data['zone_requirements']
+    def is_available(self, hour: int) -> bool:
+        return int(self.start_time[:2]) <= hour < int(self.end_time[:2])
 
-def validate_employee_data(employees: Dict[str, Dict[str, Any]]) -> None:
-    errors: List[str] = []
-    for employee_id, employee_data in employees.items():
-        if "start" not in employee_data:
-            errors.append(f"Missing start time for {employee_id}")
-        if "end" not in employee_data:
-            errors.append(f"Missing end time for {employee_id}")
-        if "skills" not in employee_data:
-            errors.append(f"Missing skills for {employee_id}")
+    def has_required_skills(self, zone_id: str, zone_requirements: Dict[str, List[str]]) -> bool:
+        required_skills = zone_requirements.get(zone_id, [])
+        return all(skill in self.skills for skill in required_skills)
 
-    if errors:
-        print("Invalid employee data:")
-        for error in errors:
-            print(error)
-        raise ValueError("Invalid employee data")
+    def assign_to_zone(self, zone_id: str, hour: int):
+        self.assignments[hour] = zone_id
+        self.consecutive_hours += 1
 
+class Zone:
+    def __init__(self, zone_id: str, capacity: int):
+        self.zone_id = zone_id
+        self.capacity = capacity
 
-# Add this before processing data
-validate_employee_data(employees)
+def load_data(zones_file: str, employees_file: str) -> Tuple[Dict[str, Zone], Dict[str, List[str]], Dict[str, Employee]]:
+    with open(zones_file) as f:
+        data = json.load(f)
+        zones = {zone_id: Zone(zone_id, capacity) for zone_id, capacity in data['zones'].items()}
+        zone_requirements = data['zone_requirements']
 
+    with open(employees_file) as f:
+        data = json.load(f)
+        employees = {employee_id: Employee(employee_id, employee_data['start'], employee_data['end'], employee_data['skills'])
+                     for employee_id, employee_data in data.items()}
 
-def has_required_skills(employee: str, zone_id: str) -> bool:
-  """Check if an employee has the required skills for a zone."""
-  employee_skills: List[str] = employees[employee]["skills"]
-  required_skills: List[str] = zone_requirements.get(zone_id, [])
-  return all(skill in employee_skills for skill in required_skills)
+    return zones, zone_requirements, employees
 
-def calculate_penalty(consecutive_hours: int) -> int:
-    """Calculate the penalty for consecutive hours worked."""
-    if consecutive_hours <= 4:
-        return 0  # No penalty within the preferred limit
-    else:
-        return consecutive_hours - 4  # Penalty increases linearly after four hours
+def find_best_employee(available_employees: List[Employee], zone_id: str, hour: int, zone_requirements: Dict[str, List[str]]) -> Employee | None:
+    min_consecutive_hours = float('inf')
+    best_employee = None
 
+    for employee in available_employees:
+        if employee.has_required_skills(zone_id, zone_requirements) and hour not in employee.assignments:
+            if employee.consecutive_hours < min_consecutive_hours:
+                min_consecutive_hours = employee.consecutive_hours
+                best_employee = employee
 
-def find_best_employee(available_employees: List[Tuple[str, Dict[str, Any]]], zone_id: str, hour: int, employee_usage: Dict[str, Dict[str, Any]], schedule: Dict[str, List[Tuple[str, int]]], errors: List[str]) -> str:
-    """Find the best employee for a given zone and hour."""
-    def penalty_key(employee_data: Tuple[str, Dict[str, Any]]) -> int:
-        employee, _ = employee_data
-        return calculate_penalty(employee_usage[employee]['used'])
+    return best_employee
 
-    filtered_employees = [
-        (employee, data) for employee, data in available_employees
-        if has_required_skills(employee, zone_id) and hour not in employee_usage[employee]['assignments']
-        and not any(zone_id == assigned_zone for assigned_zone, _ in schedule.get(employee, []))
-    ]
-
-    if filtered_employees:
-        return min(filtered_employees, key=penalty_key)[0]
-    else:
-        return None
-
-
-def assign_employee_to_zone(employee: str, zone_id: str, hour: int, employee_usage: Dict[str, Dict[str, Any]], zone_data_copy: Dict[str, int], schedule: Dict[str, List[Tuple[str, int]]]) -> None:
-  """Assign an employee to a zone for a given hour."""
-  schedule.setdefault(zone_id, []).append((employee, hour))
-  zone_data_copy["capacity"] -= 1
-  employee_usage[employee]['used'] += 1
-  employee_usage[employee]['current_zone'] = zone_id
-  employee_usage[employee]['assignments'][hour] = zone_id
-
-def match_employees_to_zones(employees: Dict[str, Dict[str, Any]]) -> Tuple[Dict[str, List[Tuple[str, int]]], List[str]]:
-    """Match employees to zones based on availability and requirements."""
+def match_employees_to_zones(zones: Dict[str, Zone], zone_requirements: Dict[str, List[str]], employees: Dict[str, Employee]) -> Tuple[Dict[str, List[Tuple[str, int]]], List[str]]:
     schedule: Dict[str, List[Tuple[str, int]]] = {}
     errors: List[str] = []
-    employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
 
-    min_start_time = min(int(data["start"][:2]) for data in employees.values())
-    max_end_time = max(int(data["end"][:2]) for data in employees.values())
+    for hour in range(8, 22):
+        for zone in zones.values():
+            if zone.capacity > 0:
+                available_employees = [employee for employee in employees.values() if employee.is_available(hour)]
+                best_employee = find_best_employee(available_employees, zone.zone_id, hour, zone_requirements)
 
-    for hour in range(min_start_time, max_end_time):
-        available_employees: List[Tuple[str, Dict[str, Any]]] = [
-            (emp, data) for emp, data in employees.items()
-            if int(data["start"][:2]) <= hour < int(data["end"][:2])
-        ]
-
-        for zone_id, zone_data in zones.items():
-            zone_data_copy: Dict[str, int] = zone_data.copy()
-
-            if zone_data_copy["capacity"] > 0:
-                if available_employees:
-                    best_employee: str = find_best_employee(available_employees, zone_id, hour, employee_usage, schedule, errors)
-                    if best_employee:
-                        assign_employee_to_zone(best_employee, zone_id, hour, employee_usage, zone_data_copy, schedule)
-                    else:
-                        schedule.setdefault(zone_id, []).append(('BOH', hour))  # Changed from 'TBA' to 'BOH'
+                if best_employee:
+                    best_employee.assign_to_zone(zone.zone_id, hour)
+                    zone.capacity -= 1
+                    schedule.setdefault(zone.zone_id, []).append((best_employee.employee_id, hour))
                 else:
-                    schedule.setdefault(zone_id, []).append(('BOH', hour))  # Changed from 'TBA' to 'BOH'
+                    schedule.setdefault(zone.zone_id, []).append(('Unassigned', hour))
 
     return schedule, errors
 
 
-
-def resolve_tba_assignments(schedule: Dict[str, List[Tuple[str, int]]], errors: List[str], employee_usage: Dict[str, Dict[str, Any]]) -> None:
-    """Assign available employees to 'BOH' slots if they become available."""
+def resolve_unassigned_slots(schedule: Dict[str, List[Tuple[str, int]]], employees: Dict[str, Employee], zone_requirements: Dict[str, List[str]]) -> None:
     for zone_id, assignments in schedule.items():
-        for i, (employee, hour) in enumerate(assignments):
-            if employee == 'BOH':
-                later_employees: List[Tuple[str, Dict[str, Any]]] = [
-                  (emp, data) for emp, data in employees.items()
-                  if int(data["start"][:2]) > hour and int(data["start"][:2]) < int(data["end"][:2])
-                ]
-                if later_employees:
-                    best_employee: str = find_best_employee(later_employees, zone_id, hour, employee_usage, schedule, errors)
-                    if best_employee:
-                        schedule[zone_id][i] = (best_employee, hour)
-                        employee_usage[best_employee]['used'] += 1
-                        employee_usage[best_employee]['current_zone'] = zone_id
-                        employee_usage[best_employee]['assignments'][hour] = zone_id
+        for i, (employee_id, hour) in enumerate(assignments):
+            if employee_id == 'Unassigned':
+                for employee in employees.values():
+                    if employee.is_available(hour) and employee.has_required_skills(zone_id, zone_requirements) and hour not in employee.assignments:
+                        employee.assign_to_zone(zone_id, hour)
+                        schedule[zone_id][i] = (employee.employee_id, hour)
+                        break
 
-
-
-def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]], employee_usage: Dict[str, Dict[str, Any]]) -> None:
-    """Write the schedule to a CSV file."""
+def write_schedule_to_csv(schedule: Dict[str, List[Tuple[str, int]]]) -> None:
+    fieldnames = ['Zone', 'Employee', 'Start', 'End']
     with open('schedule.csv', 'w', newline='') as csvfile:
-        fieldnames: List[str] = ['Zone', 'Employee', 'Start', 'End', 'Penalty']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
-        boh_count: int = 0
-        consecutive_hours: Dict[str, int] = {emp: 0 for emp in employees}
-
         for zone_id, assignments in schedule.items():
-            for hour in range(8, 21):
-                found = False
-                for employee, assigned_hour in assignments:
+            for hour in range(8, 22):
+                employee_id = 'Unassigned'
+                for emp_id, assigned_hour in assignments:
                     if assigned_hour == hour:
-                        start_time = f"{hour:02d}:00"
-                        end_time = f"{hour + 1:02d}:00"
-                        penalty = calculate_penalty(consecutive_hours[employee])
-                        writer.writerow({'Zone': zone_id, 'Employee': employee, 'Start': start_time, 'End': end_time, 'Penalty': penalty})
-                        found = True
-                        consecutive_hours[employee] += 1
+                        employee_id = emp_id
                         break
-                    else:
-                        consecutive_hours[employee] = 0
-                if not found:
-                    start_time = f"{hour:02d}:00"
-                    end_time = f"{hour + 1:02d}:00"
-                    writer.writerow({'Zone': zone_id, 'Employee': 'BOH', 'Start': start_time, 'End': end_time, 'Penalty': 0})
-                    boh_count += 1
 
-
-
-        writer.writerow({'Zone': 'Total BOH Slots', 'Employee': str(boh_count), 'Start': '', 'End': '', 'Penalty': ''})
+                start_time = f"{hour:02d}:00"
+                end_time = f"{hour + 1:02d}:00"
+                writer.writerow({'Zone': zone_id, 'Employee': employee_id, 'Start': start_time, 'End': end_time})
 
 def print_errors(errors: List[str]) -> None:
-  """Print any errors that occurred during the matching process."""
-  if errors:
-    print("Errors during matching:")
-    for error in errors:
-      print(error)
-  else:
-    print("No errors occurred during matching.")
+    if errors:
+        print("Errors during matching:")
+        for error in errors:
+            print(error)
+    else:
+        print("No errors occurred during matching.")
 
-# Existing functions 
+def main():
+    try:
+        zones, zone_requirements, employees = load_data('zones.json', 'employees.json')
+        schedule, errors = match_employees_to_zones(zones, zone_requirements, employees)
+        resolve_unassigned_slots(schedule, employees, zone_requirements)
+        write_schedule_to_csv(schedule)
+        print_errors(errors)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    else:
+        print("Schedule generated successfully.")
 
-# Main program
-try:
-    schedule, errors = match_employees_to_zones(employees)
-    employee_usage: Dict[str, Dict[str, Any]] = {emp: {'used': 0, 'current_zone': None, 'assignments': {}} for emp in employees}
-
-    resolve_tba_assignments(schedule, errors, employee_usage)
-
-    write_schedule_to_csv(schedule, employee_usage)
-
-except ValueError as e:
-    print("Invalid employee data:", e)
-
-except Exception as e:
-    print("Error generating schedule:", e)
-
-else:
-    print("Schedule generated successfully")
-
-finally:
-    print("Process complete")
-
-print_errors(errors)
-
-
+if __name__ == "__main__":
+    main()

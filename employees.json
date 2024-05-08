@@ -1,123 +1,103 @@
-{
-    "kempkyan": {
-      "start": "08:00",
-      "end": "12:00",
-      "skills": [
-        "CS",
-        "CHR",
-        "ALC",
-        "ENT"
-      ]
+[
+    {
+        "name": "John Doe",
+        "employeeID": "DoeJ__",
+        "start": "09:00",
+        "end": "17:00",
+        "skills": [
+            "ENT",
+            "CS",
+            "BA"
+        ]
     },
-    "fizzyfiz": {
-      "start": "08:00",
-      "end": "14:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Jane Smith",
+        "employeeID": "SmithJ",
+        "start": "10:00",
+        "end": "16:00",
+        "skills": [
+            "ENT",
+            "CHR"
+        ]
     },
-    "jennfowl": {
-      "start": "08:00",
-      "end": "13:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Michael Johnson",
+        "employeeID": "JohnsM",
+        "start": "08:30",
+        "end": "14:30",
+        "skills": [
+            "CS",
+            "CHR"
+        ]
     },
-    "jimmyjim": {
-      "start": "08:00",
-      "end": "12:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Emily Davis",
+        "employeeID": "DavisE",
+        "start": "11:00",
+        "end": "19:00",
+        "skills": [
+            "ENT"
+        ]
     },
-    "night1": {
-      "start": "12:00",
-      "end": "17:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "David Wilson",
+        "employeeID": "WilsoD",
+        "start": "09:30",
+        "end": "15:30",
+        "skills": [
+            "CS",
+            "CHR"
+        ]
     },
-    "night2": {
-      "start": "12:00",
-      "end": "17:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Sarah Anderson",
+        "employeeID": "AnderS",
+        "start": "10:30",
+        "end": "18:30",
+        "skills": [
+            "ENT",
+            "CS",
+            "CHR"
+        ]
     },
-    "night3": {
-      "start": "12:00",
-      "end": "17:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Robert Taylor",
+        "employeeID": "TayloR",
+        "start": "12:00",
+        "end": "20:00",
+        "skills": [
+            "ENT",
+            "CHR",
+            "BA"
+        ]
     },
-    "night4": {
-      "start": "12:00",
-      "end": "17:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Olivia Martinez",
+        "employeeID": "MartiO",
+        "start": "07:00",
+        "end": "15:00",
+        "skills": [
+            "CS"
+        ]
     },
-    "evening1": {
-      "start": "15:00",
-      "end": "20:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Daniel Harris",
+        "employeeID": "HarriD",
+        "start": "13:00",
+        "end": "21:00",
+        "skills": [
+            "ENT",
+            "CHR"
+        ]
     },
-    "evening2": {
-      "start": "15:00",
-      "end": "20:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
-    },
-    "evening3": {
-      "start": "15:00",
-      "end": "20:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
-    },
-    "evening4": {
-      "start": "15:00",
-      "end": "20:00",
-      "skills": [
-        "ALC",
-        "ENT",
-        "CS",
-        "CHR"
-      ]
+    {
+        "name": "Sophia Thompson",
+        "employeeID": "ThompS",
+        "start": "11:30",
+        "end": "19:30",
+        "skills": [
+            "ENT",
+            "CS"
+        ]
     }
-  }
-  
+]

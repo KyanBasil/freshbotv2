@@ -2,6 +2,8 @@ from flask import Flask, render_template, request
 import json
 import csv
 from datetime import datetime, timedelta
+import tempfile
+import os
 
 app = Flask(__name__)
 
@@ -20,10 +22,10 @@ skill_zones = {
     'ENT': 'Entrance'
 }
 
-def generate_schedule():
+def generate_schedule(file_path):
     # Read the daily schedule from the CSV file
     daily_schedule = []
-    with open('daily_schedule.csv', 'r') as file:
+    with open(file_path, 'r') as file:
         csv_reader = csv.DictReader(file)
         for row in csv_reader:
             if row['name'] in employee_skills:
@@ -75,19 +77,23 @@ def generate_schedule():
     return schedule_sorted
 
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
         if file:
-            # Save the uploaded file
-            file.save('daily_schedule.csv')
+            # Save the uploaded file to a temporary directory
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                file.save(temp_file.name)
+                temp_file_path = temp_file.name
 
             # Process the CSV file and generate the schedule
-            schedule = generate_schedule()
+            schedule = generate_schedule(temp_file_path)
 
             return render_template('schedule.html', schedule=schedule)
 
     return render_template('upload.html')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

@@ -63,3 +63,24 @@ for time, zones in sorted(schedule_sorted.items()):
     for zone, employee in zones.items():
         print(f"  {zone}: {employee}")
     print()
+
+# Convert the schedule to a format suitable for JSON serialization
+schedule_json = {}
+for time, zones in sorted(schedule_sorted.items()):
+    time_str = time.strftime('%I:%M %p')
+    schedule_json[time_str] = zones
+
+# Save the schedule data as a JSON file
+with open('schedule.json', 'w') as file:
+    json.dump(schedule_json, file, indent=2)
+
+# Print the schedule
+for time, zones in sorted(schedule_sorted.items()):
+    time_str = time.strftime('%I:%M %p')
+    print(f"{time_str}:")
+    for zone, employee in zones.items():
+        print(f"  {zone}: {employee}")
+    print()
+
+
+

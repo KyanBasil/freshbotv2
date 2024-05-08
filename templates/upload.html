@@ -2,12 +2,40 @@
 <html>
 <head>
     <title>Upload Daily Schedule</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('form').submit(function(event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: '/',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        } else {
+                            $('#error-message').text('Unexpected response from the server.');
+                        }
+                    },
+                    error: function(xhr) {
+                        var errorMessage = xhr.responseJSON.error;
+                        $('#error-message').text(errorMessage);
+                    }
+                });
+            });
+        });
+    </script>
 </head>
 <body>
     <h1>Upload Daily Schedule</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
+    <form>
         <input type="file" name="file">
         <input type="submit" value="Upload">
     </form>
+    <div id="error-message" style="color: red;"></div>
 </body>
 </html>

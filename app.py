@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify, session
 import json
 import csv
-from datetime import datetime, timedelta
 import tempfile
-import os
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Set a secret key for session handling
 
 # Read employee data from JSON file
 with open('employees.json') as file:
@@ -77,23 +77,39 @@ def generate_schedule(file_path):
     return schedule_sorted
 
 @app.route('/', methods=['GET', 'POST'])
-@app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
         if file:
-            # Save the uploaded file to a temporary directory
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                file.save(temp_file.name)
-                temp_file_path = temp_file.name
+            if file.filename.endswith('.csv'):
+                # Save the uploaded file to a temporary directory
+                with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                    file.save(temp_file.name)
+                    temp_file_path = temp_file.name
 
-            # Process the CSV file and generate the schedule
-            schedule = generate_schedule(temp_file_path)
-
-            return render_template('schedule.html', schedule=schedule)
+                # Process the CSV file and generate the schedule
+                try:
+                    schedule = generate_schedule(temp_file_path)
+                    session['schedule'] = schedule  # Store the schedule in the session
+                    return jsonify({'redirect': '/schedule'})
+                except Exception as e:
+                    error_message = str(e)
+                    return jsonify({'error': error_message}), 500
+            else:
+                return jsonify({'error': 'Unsupported file type. Please upload a CSV file.'}), 400
+        else:
+            return jsonify({'error': 'No file selected for upload.'}), 400
 
     return render_template('upload.html')
 
+@app.route('/schedule')
+def show_schedule():
+    # Retrieve the generated schedule from the session
+    schedule = session.get('schedule')
+    if schedule:
+        return render_template('schedule.html', schedule=schedule)
+    else:
+        return "No schedule found. Please upload a CSV file first."
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

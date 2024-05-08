@@ -1,9 +1,13 @@
 import json
+import csv
 from datetime import datetime, timedelta
 
 # Read employee data from JSON file
 with open('employees.json') as file:
     employees = json.load(file)
+
+# Create a dictionary to store employee names and their skills
+employee_skills = {emp['name']: emp['skills'] for emp in employees}
 
 # Define skill zones
 skill_zones = {
@@ -13,8 +17,16 @@ skill_zones = {
     'ENT': 'Entrance'
 }
 
-# Sort employees by start time
-sorted_employees = sorted(employees, key=lambda emp: emp['start'])
+# Read the daily schedule from the CSV file
+daily_schedule = []
+with open('daily_schedule.csv', 'r') as file:
+    csv_reader = csv.DictReader(file)
+    for row in csv_reader:
+        if row['name'] in employee_skills:
+            daily_schedule.append(row)
+
+# Sort the daily schedule by start time
+sorted_daily_schedule = sorted(daily_schedule, key=lambda emp: emp['start'])
 
 # Define start and end times for the schedule
 start_time = datetime.strptime('08:00', '%H:%M')
@@ -30,8 +42,8 @@ while current_time <= end_time:
     schedule[time_str] = {zone: 'No employee assigned' for zone in skill_zones.values()}
     current_time += timedelta(minutes=30)
 
-# Iterate over sorted employees
-for employee in sorted_employees:
+# Iterate over sorted daily schedule
+for employee in sorted_daily_schedule:
     emp_start_time = datetime.strptime(employee['start'], '%H:%M')
     emp_end_time = datetime.strptime(employee['end'], '%H:%M')
 
@@ -44,7 +56,7 @@ for employee in sorted_employees:
         if start_time <= current_time <= end_time:
             # Assign employee to appropriate skill zone based on the defined order
             for skill in ['BA', 'CHR', 'CS', 'ENT']:
-                if skill in employee['skills']:
+                if skill in employee_skills[employee['name']]:
                     zone = skill_zones[skill]
                     if schedule[time_str][zone] == 'No employee assigned':
                         schedule[time_str][zone] = employee['name']
@@ -73,14 +85,3 @@ for time, zones in sorted(schedule_sorted.items()):
 # Save the schedule data as a JSON file
 with open('schedule.json', 'w') as file:
     json.dump(schedule_json, file, indent=2)
-
-# Print the schedule
-for time, zones in sorted(schedule_sorted.items()):
-    time_str = time.strftime('%I:%M %p')
-    print(f"{time_str}:")
-    for zone, employee in zones.items():
-        print(f"  {zone}: {employee}")
-    print()
-
-
-

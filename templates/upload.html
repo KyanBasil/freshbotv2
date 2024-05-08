@@ -1,7 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Upload Daily Schedule</title>
+{% extends 'base.html' %}
+
+{% block title %}Upload Daily Schedule{% endblock %}
+
+{% block content %}
+    <div class="upload-container">
+        <h2>Upload Daily Schedule</h2>
+        <form>
+            <input type="file" name="file">
+            <input type="submit" value="Upload">
+        </form>
+        <div id="error-message" class="error-message"></div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
@@ -29,13 +39,4 @@
             });
         });
     </script>
-</head>
-<body>
-    <h1>Upload Daily Schedule</h1>
-    <form>
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-    </form>
-    <div id="error-message" style="color: red;"></div>
-</body>
-</html>
+{% endblock %}

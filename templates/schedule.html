@@ -1,17 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Generated Schedule</title>
-</head>
-<body>
-    <h1>Generated Schedule</h1>
+{% extends 'base.html' %}
+
+{% block title %}Generated Schedule{% endblock %}
+
+{% block content %}
+    <h2>Generated Schedule</h2>
     {% for time, zones in schedule.items() %}
-        <h3>{{ time.strftime('%I:%M %p') }}</h3>
-        <ul>
-            {% for zone, employee in zones.items() %}
-                <li>{{ zone }}: {{ employee }}</li>
-            {% endfor %}
-        </ul>
+    <h3>{{ time }}</h3>
+    <ul>
+        {% for zone, employee in zones.items() %}
+        <li>{{ zone }}: {{ employee }}</li>
+        {% endfor %}
+    </ul>
     {% endfor %}
-</body>
-</html>
+{% endblock %}

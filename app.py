@@ -71,8 +71,8 @@ def generate_schedule(file_path):
             # Move to the next 30-minute interval
             current_time += timedelta(minutes=30)
 
-    # Convert schedule keys to datetime objects for sorting
-    schedule_sorted = {datetime.strptime(time_str, '%I:%M %p'): zones for time_str, zones in schedule.items()}
+    # Sort the schedule by time
+    schedule_sorted = dict(sorted(schedule.items(), key=lambda x: datetime.strptime(x[0], '%I:%M %p')))
 
     return schedule_sorted
 
@@ -107,7 +107,9 @@ def show_schedule():
     # Retrieve the generated schedule from the session
     schedule = session.get('schedule')
     if schedule:
-        return render_template('schedule.html', schedule=schedule)
+        # Sort the schedule by time
+        schedule_sorted = dict(sorted(schedule.items(), key=lambda x: datetime.strptime(x[0], '%I:%M %p')))
+        return render_template('schedule.html', schedule=schedule_sorted)
     else:
         return "No schedule found. Please upload a CSV file first."
 

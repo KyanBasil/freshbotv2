@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #232f3e;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        footer {
+            background-color: #232f3e;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://seeklogo.com/images/A/amazon-fresh-logo-49CD8B4F77-seeklogo.com.png" alt="Logo">
+        <h1>Freshbot</h1>
+    </header>
+
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+        Internal Service made for that one bald manager
+    </footer>
+</body>
+</html>

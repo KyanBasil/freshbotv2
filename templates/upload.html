@@ -8,7 +8,8 @@
             <h2>Upload Daily Schedule</h2>
             <form>
                 <div class="form-group">
-                    <input type="file" name="file" class="form-control-file">
+                    <label for="file-input" class="file-label">Choose a file</label>
+                    <input type="file" name="file" id="file-input" class="form-control-file">
                 </div>
                 <div class="form-group">
                     <input type="submit" value="Upload" class="btn btn-primary">
@@ -47,6 +48,10 @@
     </script>
 
     <style>
+        body {
+            background-color: #f7f7f7;
+        }
+
         .upload-container {
             display: flex;
             justify-content: center;
@@ -55,15 +60,46 @@
         }
 
         .upload-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #007c00;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007c00;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-control-file {
+            display: none;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background-color: #007c00;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         .error-message {
-            color: red;
+            color: #ff0000;
             margin-top: 10px;
         }
     </style>

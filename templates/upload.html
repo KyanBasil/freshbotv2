@@ -15,6 +15,7 @@
                     <input type="submit" value="Upload" class="btn btn-primary">
                 </div>
             </form>
+            <button id="upload-demo-schedule" class="btn btn-secondary">Upload Demo Schedule</button>
             <div id="error-message" class="error-message"></div>
         </div>
     </div>
@@ -31,6 +32,24 @@
                     data: formData,
                     processData: false,
                     contentType: false,
+                    success: function(response) {
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        } else {
+                            $('#error-message').text('Unexpected response from the server.');
+                        }
+                    },
+                    error: function(xhr) {
+                        var errorMessage = xhr.responseJSON.error;
+                        $('#error-message').text(errorMessage);
+                    }
+                });
+            });
+
+            $('#upload-demo-schedule').click(function() {
+                $.ajax({
+                    url: '/upload_demo_schedule',
+                    type: 'POST',
                     success: function(response) {
                         if (response.redirect) {
                             window.location.href = response.redirect;
@@ -96,6 +115,16 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
         }
 
         .error-message {

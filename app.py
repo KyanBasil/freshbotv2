@@ -78,7 +78,7 @@ def generate_schedule(file_path):
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        file = request.files['file']
+        file = request.files.get('file')
         if file:
             if file.filename.endswith('.csv'):
                 # Save the uploaded file to a temporary directory
@@ -100,6 +100,17 @@ def upload_file():
             return jsonify({'error': 'No file selected for upload.'}), 400
 
     return render_template('upload.html')
+
+@app.route('/upload_demo_schedule', methods=['POST'])
+def upload_demo_schedule():
+    demo_file_path = 'daily_schedule.csv'
+    try:
+        schedule = generate_schedule(demo_file_path)
+        session['schedule'] = schedule  # Store the schedule in the session
+        return jsonify({'redirect': '/schedule'})
+    except Exception as e:
+        error_message = str(e)
+        return jsonify({'error': error_message}), 500
 
 @app.route('/schedule')
 def show_schedule():

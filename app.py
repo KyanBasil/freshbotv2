@@ -16,7 +16,6 @@ employee_skills = {emp['name']: emp['skills'] for emp in employees}
 
 # Define skill zones
 skill_zones = {
-    'BA': 'Brand Ambassador',
     'CHR': 'Cashier',
     'CS': 'Customer Service',
     'ENT': 'Entrance'
@@ -61,7 +60,7 @@ def generate_schedule(file_path):
             # Check if the current time slot is within the schedule range
             if start_time <= current_time <= end_time:
                 # Assign employee to appropriate skill zone based on the defined order
-                for skill in ['BA', 'CHR', 'CS', 'ENT']:
+                for skill in ['CHR', 'CS', 'ENT']:
                     if skill in employee_skills[employee['name']]:
                         zone = skill_zones[skill]
                         if schedule[time_str][zone] == 'No employee assigned':

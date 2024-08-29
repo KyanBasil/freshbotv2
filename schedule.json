@@ -1,174 +1,145 @@
 {
   "08:00 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "No employee assigned",
     "Customer Service": "No employee assigned",
     "Entrance": "No employee assigned"
   },
   "08:30 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "No employee assigned",
     "Customer Service": "Olivia Martinez",
     "Entrance": "No employee assigned"
   },
   "09:00 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "No employee assigned"
   },
   "09:30 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "10:00 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "10:30 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "11:00 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "11:30 AM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "12:00 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "12:30 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "01:00 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "01:30 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "02:00 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "02:30 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "03:00 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "03:30 PM": {
-    "Brand Ambassador": "John Doe",
     "Cashier": "Jane Smith",
     "Customer Service": "Olivia Martinez",
     "Entrance": "Daniel Harris"
   },
   "04:00 PM": {
-    "Brand Ambassador": "Olivia Martinez",
     "Cashier": "Jane Smith",
     "Customer Service": "Michael Johnson",
     "Entrance": "Daniel Harris"
   },
   "04:30 PM": {
-    "Brand Ambassador": "Emily Davis",
     "Cashier": "Jane Smith",
     "Customer Service": "Michael Johnson",
     "Entrance": "Daniel Harris"
   },
   "05:00 PM": {
-    "Brand Ambassador": "Emily Davis",
     "Cashier": "Daniel Harris",
     "Customer Service": "Michael Johnson",
     "Entrance": "Sophia Thompson"
   },
   "05:30 PM": {
-    "Brand Ambassador": "Emily Davis",
     "Cashier": "Michael Johnson",
     "Customer Service": "Sophia Thompson",
     "Entrance": "Emma Walker"
   },
   "06:00 PM": {
-    "Brand Ambassador": "Emily Davis",
     "Cashier": "James Robinson",
     "Customer Service": "Sophia Thompson",
     "Entrance": "Emma Walker"
   },
   "06:30 PM": {
-    "Brand Ambassador": "Emily Davis",
     "Cashier": "James Robinson",
     "Customer Service": "David Wilson",
     "Entrance": "Emma Walker"
   },
   "07:00 PM": {
-    "Brand Ambassador": "James Robinson",
     "Cashier": "David Wilson",
     "Customer Service": "Sarah Anderson",
     "Entrance": "Emma Walker"
   },
   "07:30 PM": {
-    "Brand Ambassador": "Emma Walker",
     "Cashier": "David Wilson",
     "Customer Service": "Sarah Anderson",
     "Entrance": "Robert Taylor"
   },
   "08:00 PM": {
-    "Brand Ambassador": "Emma Walker",
     "Cashier": "Sarah Anderson",
     "Customer Service": "William White",
     "Entrance": "Robert Taylor"
   },
   "08:30 PM": {
-    "Brand Ambassador": "Robert Taylor",
     "Cashier": "Sarah Anderson",
     "Customer Service": "William White",
     "Entrance": "Ava Green"
   },
   "09:00 PM": {
-    "Brand Ambassador": "Robert Taylor",
     "Cashier": "William White",
     "Customer Service": "Ava Green",
     "Entrance": "Mia Davis"
   },
   "09:30 PM": {
-    "Brand Ambassador": "Robert Taylor",
     "Cashier": "Liam Brown",
     "Customer Service": "Ava Green",
     "Entrance": "Mia Davis"
   },
   "10:00 PM": {
-    "Brand Ambassador": "No employee assigned",
     "Cashier": "No employee assigned",
     "Customer Service": "No employee assigned",
     "Entrance": "No employee assigned"

@@ -4,8 +4,7 @@
         "employeeID": "DoeJ__",
         "skills": [
             "ENT",
-            "CS",
-            "BA"
+            "CS"
         ]
     },
     {
@@ -28,8 +27,7 @@
         "name": "Emily Davis",
         "employeeID": "DavisE",
         "skills": [
-            "ENT",
-            "BA"
+            "ENT"
         ]
     },
     {
@@ -54,16 +52,14 @@
         "employeeID": "TayloR",
         "skills": [
             "ENT",
-            "CHR",
-            "BA"
+            "CHR"
         ]
     },
     {
         "name": "Olivia Martinez",
         "employeeID": "MartiO",
         "skills": [
-            "CS",
-            "BA"
+            "CS"
         ]
     },
     {
@@ -87,16 +83,14 @@
         "employeeID": "RobinJ",
         "skills": [
             "CS",
-            "CHR",
-            "BA"
+            "CHR"
         ]
     },
     {
         "name": "Emma Walker",
         "employeeID": "WalkeE",
         "skills": [
-            "ENT",
-            "BA"
+            "ENT"
         ]
     },
     {
@@ -112,8 +106,7 @@
         "employeeID": "GreenA",
         "skills": [
             "ENT",
-            "CS",
-            "BA"
+            "CS"
         ]
     },
     {
@@ -128,8 +121,7 @@
         "name": "Mia Davis",
         "employeeID": "DavisM",
         "skills": [
-            "ENT",
-            "BA"
+            "ENT"
         ]
     }
 ]

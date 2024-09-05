@@ -1,0 +1,44 @@
+Retail Zone Assignment Program - High-Level Overview
+
+1. Purpose:
+   This program automates the assignment of retail employees to specific zones based on their skills and schedules.
+
+2. Key Components:
+   a. Employee Class: Represents individual employees with their names, skills, and schedules.
+   b. Zone Class: Represents store zones, each requiring a specific skill and tracking assignments.
+   c. Schedule Reader: Imports employee schedules from a CSV file.
+   d. Zone Assignment Engine: Assigns employees to zones based on skills and availability.
+   e. Output Generator: Produces a readable format of zone assignments.
+
+3. Main Functionality:
+   - Reads employee schedules and skills from a CSV file.
+   - Assigns one employee per zone at any given time.
+   - Ensures continuous coverage of zones when possible.
+   - Minimizes employee rotations between zones.
+   - Assigns based on current needs and employee skills.
+
+4. Process Flow:
+   a. Load employee data from CSV file.
+   b. Initialize zone objects for each store area.
+   c. Sort employees by shift start time.
+   d. Iterate through employees and time slots, assigning to available zones.
+   e. Generate and display zone assignments.
+
+5. Current Limitations:
+   - Does not handle breaks or lunches (planned for future implementation).
+   - No standby list for extra employees (planned for future implementation).
+   - Does not consider peak hours or multi-employee zone staffing.
+
+6. Future Enhancements:
+   - Implement break and lunch scheduling.
+   - Add a standby list for unassigned employees.
+   - Create a user interface for easier data input and visualization.
+   - Implement more sophisticated assignment algorithms for complex scenarios.
+
+7. Input Format:
+   CSV file with columns: Name, Skills, Start Time, End Time
+
+8. Output Format:
+   Text-based list of assignments for each zone, sorted by time.
+
+This program provides a foundation for automating zone assignments in a retail environment, with room for future expansions and refinements based on specific store needs.

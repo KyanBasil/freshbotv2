@@ -1,0 +1,16 @@
+{
+  "employees": [
+    {
+      "alias": "kempkyan",
+      "skills": ["ENT", "CSH", "CSS", "ACO"]
+    },
+    {
+      "alias": "smithjoh",
+      "skills": ["ENT", "CSH", "ACO"]
+    },
+    {
+      "alias": "doejane",
+      "skills": ["CSS", "ACO"]
+    }
+  ]
+}

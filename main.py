@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
+from prettytable import PrettyTable
+import os
+
 
 class Employee:
     def __init__(self, alias, skills):
@@ -84,6 +87,41 @@ def generate_schedule_image(zones, output_file='schedule.png'):
     plt.savefig(output_file)
     print(f"Schedule image saved as {output_file}")
 
+import os
+from prettytable import PrettyTable
+from datetime import datetime, timedelta
+
+def generate_printable_schedule(zones):
+    # Set the store hours
+    start_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=8)
+    end_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=22)
+
+    table = PrettyTable()
+    table.field_names = ["Time"] + [zone.name for zone in zones]
+
+    current_time = start_time
+    while current_time <= end_time:
+        row = [current_time.strftime('%H:%M')]
+        for zone in zones:
+            employee = zone.assignments.get(current_time, None)
+            row.append(employee.alias if employee else "-")
+        table.add_row(row)
+        current_time += timedelta(hours=1)
+
+    print(table)
+
+    try:
+        with open('printable_schedule.txt', 'w') as f:
+            f.write(str(table))
+        print("Printable schedule successfully saved as printable_schedule.txt")
+    except IOError as e:
+        print(f"Error writing to file: {e}")
+
+    if os.path.exists('printable_schedule.txt'):
+        print("File creation verified.")
+    else:
+        print("File was not created. Please check permissions and disk space.")
+
 # Main program
 zones = [
     Zone("Entrance", "ENT"),
@@ -97,4 +135,4 @@ employees = read_schedule('schedule.csv', skills_db)
 assign_zones(employees, zones)
 generate_output(zones)
 generate_schedule_image(zones)
-generate_output(zones)
+generate_printable_schedule(zones)

@@ -11,6 +11,26 @@
     {
       "alias": "doejane",
       "skills": ["CSS", "ACO"]
+    },
+    {
+      "alias": "brownmik",
+      "skills": ["ENT", "CSS", "ACO"]
+    },
+    {
+      "alias": "wilsonal",
+      "skills": ["CSH", "CSS"]
+    },
+    {
+      "alias": "taylorsa",
+      "skills": ["ENT", "CSH", "CSS"]
+    },
+    {
+      "alias": "johnsemm",
+      "skills": ["ACO", "CSS"]
+    },
+    {
+      "alias": "davisrob",
+      "skills": ["ENT", "CSH", "ACO"]
     }
   ]
 }

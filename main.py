@@ -92,9 +92,8 @@ from prettytable import PrettyTable
 from datetime import datetime, timedelta
 
 def generate_printable_schedule(zones):
-    # Set the store hours
     start_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=8)
-    end_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=22)
+    end_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=23, minute=59)
 
     table = PrettyTable()
     table.field_names = ["Time"] + [zone.name for zone in zones]
@@ -103,19 +102,17 @@ def generate_printable_schedule(zones):
     while current_time <= end_time:
         row = [current_time.strftime('%H:%M')]
         for zone in zones:
-            employee = zone.assignments.get(current_time, None)
+            employee = next((emp for time, emp in zone.assignments.items() 
+                             if time.hour == current_time.hour and time.date() == start_time.date()), None)
             row.append(employee.alias if employee else "-")
         table.add_row(row)
         current_time += timedelta(hours=1)
 
     print(table)
 
-    try:
-        with open('printable_schedule.txt', 'w') as f:
-            f.write(str(table))
-        print("Printable schedule successfully saved as printable_schedule.txt")
-    except IOError as e:
-        print(f"Error writing to file: {e}")
+    with open('printable_schedule.txt', 'w') as f:
+        f.write(str(table))
+    print("Printable schedule successfully saved as printable_schedule.txt")
 
     if os.path.exists('printable_schedule.txt'):
         print("File creation verified.")

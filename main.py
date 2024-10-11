@@ -6,6 +6,7 @@ import matplotlib.dates as mdates
 import numpy as np
 from prettytable import PrettyTable
 import os
+from scheduling import load_skills_database, read_schedule, assign_zones, generate_output, generate_schedule_image, generate_printable_schedule
 
 
 class Employee:
@@ -19,105 +20,6 @@ class Zone:
         self.name = name
         self.required_skill = required_skill
         self.assignments = {}
-
-def load_skills_database(file_path):
-    with open(file_path, 'r') as jsonfile:
-        data = json.load(jsonfile)
-    return {employee['alias']: employee['skills'] for employee in data['employees']}
-
-def read_schedule(file_path, skills_db):
-    employees = []
-    with open(file_path, 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            alias = row['Alias']
-            if alias not in skills_db:
-                print(f"Warning: No skills found for {alias}")
-                continue
-            skills = skills_db[alias]
-            start_time = datetime.strptime(row['Start Time'], '%Y-%m-%d %H:%M')
-            end_time = datetime.strptime(row['End Time'], '%Y-%m-%d %H:%M')
-            
-            employee = Employee(alias, skills)
-            employee.schedule.append((start_time, end_time))
-            employees.append(employee)
-    return employees
-
-def assign_zones(employees, zones):
-    employees.sort(key=lambda e: e.schedule[0][0])
-    
-    for employee in employees:
-        start_time, end_time = employee.schedule[0]
-        current_time = start_time
-        
-        while current_time < end_time:
-            for zone in zones:
-                if zone.required_skill in employee.skills and current_time not in zone.assignments:
-                    zone.assignments[current_time] = employee
-                    break
-            current_time += timedelta(hours=1)
-
-def generate_output(zones):
-    for zone in zones:
-        print(f"\nZone: {zone.name} (Skill: {zone.required_skill})")
-        for time, employee in sorted(zone.assignments.items()):
-            print(f"{time.strftime('%Y-%m-%d %H:%M')}: {employee.alias}")
-
-def generate_schedule_image(zones, output_file='schedule.png'):
-    fig, ax = plt.subplots(figsize=(12, 6))
-    colors = plt.cm.Set3(np.linspace(0, 1, len(zones)))
-    
-    for i, zone in enumerate(zones):
-        for time, employee in zone.assignments.items():
-            ax.bar(time, 1, width=1/24, bottom=i, color=colors[i], 
-                   align='edge', edgecolor='black', linewidth=0.5)
-            ax.text(time, i+0.5, employee.alias, ha='left', va='center', 
-                    fontsize=8, rotation=90)
-
-    ax.set_yticks(range(len(zones)))
-    ax.set_yticklabels([zone.name for zone in zones])
-    ax.set_xlabel('Time')
-    ax.set_title('Zone Assignments Schedule')
-
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
-    plt.xticks(rotation=45)
-
-    plt.tight_layout()
-    plt.savefig(output_file)
-    print(f"Schedule image saved as {output_file}")
-
-import os
-from prettytable import PrettyTable
-from datetime import datetime, timedelta
-
-def generate_printable_schedule(zones):
-    start_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=8)
-    end_time = datetime.combine(datetime.today(), datetime.min.time()).replace(hour=23, minute=59)
-
-    table = PrettyTable()
-    table.field_names = ["Time"] + [zone.name for zone in zones]
-
-    current_time = start_time
-    while current_time <= end_time:
-        row = [current_time.strftime('%H:%M')]
-        for zone in zones:
-            employee = next((emp for time, emp in zone.assignments.items() 
-                             if time.hour == current_time.hour and time.date() == start_time.date()), None)
-            row.append(employee.alias if employee else "-")
-        table.add_row(row)
-        current_time += timedelta(hours=1)
-
-    print(table)
-
-    with open('printable_schedule.txt', 'w') as f:
-        f.write(str(table))
-    print("Printable schedule successfully saved as printable_schedule.txt")
-
-    if os.path.exists('printable_schedule.txt'):
-        print("File creation verified.")
-    else:
-        print("File was not created. Please check permissions and disk space.")
 
 # Main program
 zones = [

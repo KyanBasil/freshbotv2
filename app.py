@@ -8,9 +8,19 @@ from scheduling import generate_schedule
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Set a secret key for session handling
 
+# Define a default set of employees
+default_employees = [
+    {"name": "John Doe", "skills": ["CHR", "CS", "ENT"]},
+    {"name": "Jane Smith", "skills": ["CHR", "CS"]},
+    {"name": "Alice Johnson", "skills": ["ENT"]},
+]
+
 # Read employee data from JSON file
-with open('employees.json') as file:
-    employees = json.load(file)
+try:
+    with open('employees.json') as file:
+        employees = json.load(file)
+except FileNotFoundError:
+    employees = default_employees
 
 # Create a dictionary to store employee names and their skills
 employee_skills = {emp['name']: emp['skills'] for emp in employees}

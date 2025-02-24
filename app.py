@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Dict, List, Optional
+import sentry_sdk
 
 from scheduling import generate_schedule
 from constants import SKILL_ZONES, SKILLS_DB_PATH, DATETIME_FORMAT
@@ -23,6 +24,19 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Initialize Sentry SDK before creating the Flask app
+sentry_sdk.init(
+    dsn="https://63247aa8e98648a5ee4c438764852216@o4508876433326080.ingest.us.sentry.io/4508876444860416",
+    # Add data like request headers and IP for users
+    send_default_pii=True,
+    # Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing
+    traces_sample_rate=1.0,
+    _experiments={
+        # Set continuous_profiling_auto_start to True to automatically start the profiler
+        "continuous_profiling_auto_start": True,
+    },
+)
 
 # Initialize Flask app with configuration
 app = Flask(__name__)

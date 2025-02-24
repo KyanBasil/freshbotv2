@@ -24,7 +24,7 @@ from constants import (
 
 logger = logging.getLogger(__name__)
 
-@dataclass
+@dataclass(frozen=True)
 class Employee:
     """Employee data class with schedule and skills information."""
     alias: str

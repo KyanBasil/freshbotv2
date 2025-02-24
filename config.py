@@ -16,6 +16,11 @@ class BaseConfig:
     DEBUG = False
     TESTING = False
     
+    # Sentry settings
+    SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+    SENTRY_ENVIRONMENT = os.environ.get('SENTRY_ENVIRONMENT', 'development')
+    SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '1.0'))
+    
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     UPLOAD_EXTENSIONS = ['.csv']
@@ -46,6 +51,8 @@ class TestingConfig(BaseConfig):
     DEBUG = True
     SESSION_COOKIE_SECURE = False
     WTF_CSRF_ENABLED = False  # Disable CSRF during testing
+    SENTRY_DSN = "https://test@sentry.io/1234567"  # Test DSN
+    SENTRY_ENVIRONMENT = "testing"
 
 class ProductionConfig(BaseConfig):
     """Production configuration."""

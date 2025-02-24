@@ -40,7 +40,7 @@ def main():
         # Generate text report
         logger.info("Creating printable schedule...")
         printable = generate_printable_schedule(zones)
-        with open('printable_schedule.txt', 'w') as f:
+        with open('printable_schedule.txt', 'w', encoding='utf_8') as f:
             f.write(printable)
         logger.info("Printable schedule saved to: printable_schedule.txt")
         

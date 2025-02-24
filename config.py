@@ -16,6 +16,13 @@ class BaseConfig:
     DEBUG = False
     TESTING = False
     
+    # Sentry settings
+    SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+    if not SENTRY_DSN and not TESTING:
+        raise ValueError("No SENTRY_DSN set in environment")
+    SENTRY_ENVIRONMENT = os.environ.get('SENTRY_ENVIRONMENT', 'development')
+    SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '1.0'))
+    
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     UPLOAD_EXTENSIONS = ['.csv']
@@ -38,19 +45,34 @@ class BaseConfig:
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""
     DEBUG = True
-    SESSION_COOKIE_SECURE = False  # Allow HTTP in development
+    SESSION_COOKIE_SECURE = False
+    # Development-specific Sentry settings can be overridden here if needed
+    SENTRY_TRACES_SAMPLE_RATE = 1.0
 
 class TestingConfig(BaseConfig):
     """Testing configuration."""
     TESTING = True
     DEBUG = True
     SESSION_COOKIE_SECURE = False
-    WTF_CSRF_ENABLED = False  # Disable CSRF during testing
+    WTF_CSRF_ENABLED = False
+    # Override Sentry settings for testing
+    SENTRY_DSN = "https://test@sentry.io/1234567"
+    SENTRY_ENVIRONMENT = "testing"
+    SENTRY_TRACES_SAMPLE_RATE = 1.0
 
 class ProductionConfig(BaseConfig):
     """Production configuration."""
-    # Production-specific settings here
-    pass
+    # Production-specific Sentry settings
+    SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.1'))
+    
+    @classmethod
+    def __init__(cls):
+        super().__init__()
+        # Ensure all required environment variables are set
+        required_vars = ['SENTRY_DSN', 'SENTRY_ENVIRONMENT']
+        missing = [var for var in required_vars if not os.environ.get(var)]
+        if missing:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
 
 # Configuration dictionary
 config = {

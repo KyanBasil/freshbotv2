@@ -1,37 +1,54 @@
-import csv
-import json
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import numpy as np
-from prettytable import PrettyTable
+"""
+Command-line interface for the Retail Zone Assignment System.
+Generates schedule and outputs visualization and text-based reports.
+"""
+import logging
 import os
-from scheduling import load_skills_database, read_schedule, assign_zones, generate_output, generate_schedule_image, generate_printable_schedule
+from scheduling import (
+    generate_schedule,
+    generate_schedule_image,
+    generate_printable_schedule,
+    Zone
+)
+from constants import SKILL_ZONES
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-class Employee:
-    def __init__(self, alias, skills):
-        self.alias = alias
-        self.skills = skills
-        self.schedule = []
+def main():
+    """Generate schedule and create outputs."""
+    try:
+        # Define zones based on constants
+        zones = [
+            Zone(name=name, required_skill=skill)
+            for skill, name in SKILL_ZONES.items()
+        ]
+        
+        # Generate schedule
+        logger.info("Generating schedule...")
+        schedule = generate_schedule('schedule.csv')
+        
+        # Generate visualization
+        logger.info("Creating schedule visualization...")
+        image_path = generate_schedule_image(zones)
+        logger.info(f"Schedule image saved to: {image_path}")
+        
+        # Generate text report
+        logger.info("Creating printable schedule...")
+        printable = generate_printable_schedule(zones)
+        with open('printable_schedule.txt', 'w', encoding='utf_8') as f:
+            f.write(printable)
+        logger.info("Printable schedule saved to: printable_schedule.txt")
+        
+        logger.info("Schedule generation complete!")
+        
+    except Exception as e:
+        logger.error(f"Schedule generation failed: {e}")
+        raise
 
-class Zone:
-    def __init__(self, name, required_skill):
-        self.name = name
-        self.required_skill = required_skill
-        self.assignments = {}
-
-# Main program
-zones = [
-    Zone("Entrance", "ENT"),
-    Zone("Cashier", "CSH"),
-    Zone("Customer Service", "CSS"),
-    Zone("ACO", "ACO")
-]
-
-skills_db = load_skills_database('skills_database.json')
-employees = read_schedule('schedule.csv', skills_db)
-assign_zones(employees, zones)
-generate_output(zones)
-generate_schedule_image(zones)
-generate_printable_schedule(zones)
+if __name__ == '__main__':
+    main()

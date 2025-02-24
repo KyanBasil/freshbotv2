@@ -41,7 +41,7 @@ class Employee:
         if self.start_time >= self.end_time:
             raise ValueError(f"Invalid schedule for {self.alias}: start time must be before end time")
 
-@dataclass
+@dataclass(frozen=True)
 class Zone:
     """Zone data class with assignment tracking."""
     name: str

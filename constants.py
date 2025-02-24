@@ -5,12 +5,19 @@ Constants used throughout the application.
 # Skill zone definitions
 SKILL_ZONES = {
     'ENT': 'Entrance',
-    'CSH': 'Cashier',
+    'CSH': 'Cashier', 
     'CSS': 'Customer Service',
     'ACO': 'ACO'
 }
 
-# Valid skills for validation
+# Break configuration
+SHORT_BREAK_DURATION = 15  # minutes
+LUNCH_BREAK_DURATION = 30  # minutes
+MIN_HOURS_BEFORE_BREAK = 2  # hours
+MIN_HOURS_BEFORE_LUNCH = 4  # hours
+MAX_CONSECUTIVE_HOURS = 3   # hours
+
+# Valid skills for validation 
 VALID_SKILLS = set(SKILL_ZONES.keys())
 
 # Date format for CSV parsing

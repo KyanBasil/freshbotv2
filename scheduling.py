@@ -5,7 +5,7 @@ Handles employee assignments to zones based on skills and availability.
 import csv
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
@@ -31,8 +31,35 @@ class Employee:
     skills: Set[str]
     start_time: datetime
     end_time: datetime
+    break_start: Optional[datetime] = None
+    break_end: Optional[datetime] = None
+    lunch_start: Optional[datetime] = None
+    lunch_end: Optional[datetime] = None
 
     def __post_init__(self):
+        # Validate break times if provided
+        if self.break_start or self.break_end:
+            if not (self.break_start and self.break_end):
+                raise ValueError("Both break start and end times must be provided")
+            if self.break_start < self.start_time or self.break_end > self.end_time:
+                raise ValueError("Break must be within shift hours")
+            if self.break_start >= self.break_end:
+                raise ValueError("Break start must be before end")
+
+        # Validate lunch times if provided        
+        if self.lunch_start or self.lunch_end:
+            if not (self.lunch_start and self.lunch_end):
+                raise ValueError("Both lunch start and end times must be provided")
+            if self.lunch_start < self.start_time or self.lunch_end > self.end_time:
+                raise ValueError("Lunch must be within shift hours")
+            if self.lunch_start >= self.lunch_end:
+                raise ValueError("Lunch start must be before end")
+
+        # Check for overlapping breaks
+        if (self.break_start and self.lunch_start and 
+            self.break_start <= self.lunch_end and 
+            self.lunch_start <= self.break_end):
+            raise ValueError("Break and lunch periods cannot overlap")
         """Validate employee data after initialization."""
         if not self.skills.issubset(VALID_SKILLS):
             invalid_skills = self.skills - VALID_SKILLS
@@ -89,19 +116,42 @@ def load_skills_database(file_path: str) -> Dict:
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON format in skills database: {e}")
 
+def calculate_breaks(start_time: datetime, end_time: datetime) -> tuple:
+    """Calculate automatic breaks based on shift duration."""
+    shift_duration = (end_time - start_time).total_seconds() / 3600
+    break_start = break_end = lunch_start = lunch_end = None
+    
+    # Calculate short break
+    if shift_duration >= MIN_HOURS_BEFORE_BREAK:
+        break_start = start_time + timedelta(hours=2)
+        break_end = break_start + timedelta(minutes=SHORT_BREAK_DURATION)
+    
+    # Calculate lunch break
+    if shift_duration >= MIN_HOURS_BEFORE_LUNCH:
+        lunch_midpoint = start_time + (end_time - start_time)/2
+        lunch_start = lunch_midpoint - timedelta(minutes=LUNCH_BREAK_DURATION/2)
+        lunch_end = lunch_start + timedelta(minutes=LUNCH_BREAK_DURATION)
+        
+        # Adjust if lunch overlaps with short break
+        if break_start and lunch_start < break_end:
+            lunch_start = break_end + timedelta(minutes=30)
+            lunch_end = lunch_start + timedelta(minutes=LUNCH_BREAK_DURATION)
+    
+    return break_start, break_end, lunch_start, lunch_end
+
 def read_schedule(file_path: str, skills_db: Dict) -> List[Employee]:
     """
-    Read and validate the schedule from CSV file.
+    Read and validate schedule from CSV file with automatic break calculation.
     
     Args:
-        file_path: Path to the schedule CSV file
+        file_path: Path to schedule CSV file
         skills_db: Loaded skills database
         
     Returns:
-        List of Employee objects
+        List of Employee objects with calculated breaks
         
     Raises:
-        ValueError: If the file format is invalid or contains invalid data
+        ValueError: If invalid data format or content
     """
     employees = []
     employee_skills_map = {emp['alias']: set(emp['skills']) for emp in skills_db['employees']}
@@ -116,11 +166,15 @@ def read_schedule(file_path: str, skills_db: Dict) -> List[Employee]:
             for row in reader:
                 alias = row['Alias']
                 if alias not in employee_skills_map:
-                    raise ValueError(f"Unknown employee alias in schedule: {alias}")
+                    raise ValueError(f"Unknown employee alias: {alias}")
                     
                 try:
                     start_time = datetime.strptime(row['Start Time'], DATETIME_FORMAT)
                     end_time = datetime.strptime(row['End Time'], DATETIME_FORMAT)
+                    
+                    # Calculate automatic breaks
+                    br_start, br_end, ln_start, ln_end = calculate_breaks(start_time, end_time)
+                    
                 except ValueError as e:
                     raise ValueError(f"Invalid datetime format for {alias}: {e}")
                 
@@ -128,7 +182,11 @@ def read_schedule(file_path: str, skills_db: Dict) -> List[Employee]:
                     alias=alias,
                     skills=employee_skills_map[alias],
                     start_time=start_time,
-                    end_time=end_time
+                    end_time=end_time,
+                    break_start=br_start,
+                    break_end=br_end,
+                    lunch_start=ln_start,
+                    lunch_end=ln_end
                 ))
                 
         return employees
@@ -138,7 +196,8 @@ def read_schedule(file_path: str, skills_db: Dict) -> List[Employee]:
 
 def assign_zones(employees: List[Employee], zones: List[Zone]) -> None:
     """
-    Assign employees to zones based on skills and availability.
+    Assign employees to zones based on skills and availability,
+    accounting for breaks and lunches.
     
     Args:
         employees: List of Employee objects to assign
@@ -147,31 +206,70 @@ def assign_zones(employees: List[Employee], zones: List[Zone]) -> None:
     Raises:
         ValueError: If an employee cannot be assigned to any zone
     """
-    # Sort employees by start time
-    employees.sort(key=lambda x: x.start_time)
-    
+    # Create a timeline of events (shift starts, breaks, shift ends)
+    timeline = []
     for employee in employees:
-        assigned = False
-        # First pass: try to assign to unoccupied zones
-        for zone in zones:
-            if (zone.required_skill in employee.skills and 
-                employee.start_time not in zone.assignments):
-                zone.assignments[employee.start_time] = employee.alias
-                assigned = True
-                logger.info(f"Assigned {employee.alias} to {zone.name} at {employee.start_time}")
-                break
+        timeline.append((employee.start_time, 'start', employee))
+        if employee.break_start:
+            timeline.append((employee.break_start, 'break_start', employee))
+        if employee.break_end:
+            timeline.append((employee.break_end, 'break_end', employee))
+        if employee.lunch_start:
+            timeline.append((employee.lunch_start, 'lunch_start', employee))
+        if employee.lunch_end:
+            timeline.append((employee.lunch_end, 'lunch_end', employee))
+        timeline.append((employee.end_time, 'end', employee))
+    
+    # Sort timeline chronologically
+    timeline.sort(key=lambda x: x[0])
+    
+    available_employees = set()
+    employee_assignments = {}  # Tracks current zone for each employee
+    zone_occupancies = {zone.name: {} for zone in zones}  # Tracks zone assignments
+    
+    for time, event_type, employee in timeline:
+        if event_type == 'start':
+            available_employees.add(employee)
+            
+        elif event_type in ('break_start', 'lunch_start'):
+            if employee in available_employees:
+                available_employees.remove(employee)
+                # Free up any zone assignment during break
+                if employee.alias in employee_assignments:
+                    zone = employee_assignments.pop(employee.alias)
+                    del zone_occupancies[zone.name][time]
+            
+        elif event_type in ('break_end', 'lunch_end'):
+            available_employees.add(employee)
+            
+        elif event_type == 'end':
+            if employee in available_employees:
+                available_employees.remove(employee)
+                # Free up any zone assignment at end of shift
+                if employee.alias in employee_assignments:
+                    zone = employee_assignments.pop(employee.alias)
+                    del zone_occupancies[zone.name][time]
         
-        # Second pass: if still unassigned, try any compatible zone
-        if not assigned:
-            for zone in zones:
-                if zone.required_skill in employee.skills:
-                    zone.assignments[employee.start_time] = employee.alias
-                    assigned = True
-                    logger.info(f"Assigned {employee.alias} to {zone.name} at {employee.start_time} (fallback)")
-                    break
-                    
-        if not assigned:
-            logger.warning(f"Could not assign {employee.alias} to any zone at {employee.start_time}")
+        # Assign available employees to zones
+        for emp in list(available_employees):  # Copy for iteration while modifying
+            if emp.alias not in employee_assignments:
+                # Find first available matching zone
+                for zone in zones:
+                    if (zone.required_skill in emp.skills and 
+                        not zone_occupancies[zone.name].get(time)):
+                        # Assign to zone and track occupancy
+                        zone_occupancies[zone.name][time] = emp.alias
+                        employee_assignments[emp.alias] = zone
+                        available_employees.remove(emp)
+                        logger.info(f"Assigned {emp.alias} to {zone.name} at {time}")
+                        break
+
+    # Convert occupancy tracking to final assignments
+    for zone in zones:
+        zone.assignments = {
+            time: alias 
+            for time, alias in sorted(zone_occupancies[zone.name].items())
+        }
 
 def generate_output(zones: List[Zone]) -> Dict:
     """
@@ -192,12 +290,13 @@ def generate_output(zones: List[Zone]) -> Dict:
         output[zone.name] = zone_output
     return output
 
-def generate_schedule_image(zones: List[Zone]) -> str:
+def generate_schedule_image(zones: List[Zone], employees: List[Employee]) -> str:
     """
-    Generate a visualization of the schedule.
+    Generate a visualization of the schedule with breaks.
     
     Args:
         zones: List of Zone objects with assignments
+        employees: List of Employee objects with break information
         
     Returns:
         Path to the generated image file
@@ -206,19 +305,34 @@ def generate_schedule_image(zones: List[Zone]) -> str:
         RuntimeError: If image generation fails
     """
     try:
-        fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(figsize=(16, 10))
+        
+        # Plot zone assignments
         for zone in zones:
             times = list(zone.assignments.keys())
             aliases = list(zone.assignments.values())
             if times and aliases:
-                ax.plot(times, aliases, 'o-', label=zone.name)
+                ax.plot(times, aliases, 'o-', label=zone.name, markersize=8)
+                
+        # Plot breaks as shaded regions
+        for emp in employees:
+            # Plot shift duration background
+            ax.axvspan(emp.start_time, emp.end_time, alpha=0.05, color='gray')
+            
+            # Plot breaks
+            if emp.break_start and emp.break_end:
+                ax.axvspan(emp.break_start, emp.break_end, alpha=0.3, color='red', label='Breaks' if emp == employees[0] else "")
+            
+            # Plot lunches
+            if emp.lunch_start and emp.lunch_end:
+                ax.axvspan(emp.lunch_start, emp.lunch_end, alpha=0.3, color='blue', label='Lunches' if emp == employees[0] else "")
         
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
         ax.xaxis.set_major_locator(mdates.HourLocator())
-        plt.title('Employee Zone Assignments')
-        plt.xlabel('Time')
-        plt.ylabel('Employee')
-        plt.legend()
+        plt.title('Employee Zone Assignments with Breaks', fontsize=14)
+        plt.xlabel('Time', fontsize=12)
+        plt.ylabel('Employee', fontsize=12)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         plt.tight_layout()
         
         # Ensure directory exists
@@ -295,8 +409,8 @@ def generate_schedule(file_path: str) -> Dict:
         # Assign zones
         assign_zones(employees, zones)
         
-        # Generate visualization
-        generate_schedule_image(zones)
+        # Generate visualization with employee data
+        generate_schedule_image(zones, employees)
         
         # Generate and return schedule output
         return generate_output(zones)
